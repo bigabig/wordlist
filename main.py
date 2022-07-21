@@ -4,6 +4,7 @@ import spacy
 from import_export import import_export
 from settings import model_dir
 from train_component import train_component
+from upload_dataset_component import upload_dataset_component
 from wordlist import wordlist
 from gensim.models import KeyedVectors
 
@@ -85,7 +86,11 @@ def main():
         import_export(predict)
 
     with tab3:
-        train_component(nlp)
+        st.write("## Train new model")
+        st.write(
+            "You can train your own model! Please upload training data, review the training data and start the model training :)")
+        upload_dataset_component()
+        train_component()
 
 
 if __name__ == '__main__':
