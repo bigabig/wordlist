@@ -15,17 +15,27 @@ class StreamlitStatusMessage:
         self.message = message
 
 
+def render_status(status_message: StreamlitStatusMessage):
+    match status_message.status:
+        case StreamlitStatus.ERROR:
+            st.error(status_message.message)
+        case StreamlitStatus.WARNING:
+            st.warning(status_message.message)
+        case StreamlitStatus.INFO:
+            st.info(status_message.message)
+        case StreamlitStatus.SUCCESS:
+            st.success(status_message.message)
+        case _:
+            st.error("Unknown status")
+
+
 def status_component(status_message_key):
     if status_message_key in st.session_state and st.session_state[status_message_key]:
-        match st.session_state[status_message_key].status:
-            case StreamlitStatus.ERROR:
-                st.error(st.session_state[status_message_key].message)
-            case StreamlitStatus.WARNING:
-                st.warning(st.session_state[status_message_key].message)
-            case StreamlitStatus.INFO:
-                st.info(st.session_state[status_message_key].message)
-            case StreamlitStatus.SUCCESS:
-                st.success(st.session_state[status_message_key].message)
-            case _:
-                st.error("Unknown status")
-        st.session_state[status_message_key] = None
+        if isinstance(st.session_state[status_message_key], list):
+            for status_message in st.session_state[status_message_key]:
+                render_status(status_message)
+            st.session_state[status_message_key] = []
+
+        else:
+            render_status(st.session_state[status_message_key])
+            st.session_state[status_message_key] = None

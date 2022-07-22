@@ -5,6 +5,7 @@ from import_export import import_export
 from settings import model_dir
 from train_component import train_component
 from upload_dataset_component import upload_dataset_component
+from view_dataset_component import view_dataset_component
 from wordlist import wordlist
 from gensim.models import KeyedVectors
 
@@ -77,7 +78,7 @@ def main():
         st.selectbox("Which model do you want to use?", available_gensim_models + available_user_models, key='model_name',
                      on_change=model_change_callback)
 
-    tab1, tab2, tab3 = st.tabs(["Create a wordlist", "Import & Export", "Train a model"])
+    tab1, tab2, tab3, tab4, tab5 = st.tabs(["Create wordlist", "Import & export wordlist", "Upload dataset", "View datasets", "Train model"])
 
     with tab1:
         wordlist(predict, vocab)
@@ -86,10 +87,12 @@ def main():
         import_export(predict)
 
     with tab3:
-        st.write("## Train new model")
-        st.write(
-            "You can train your own model! Please upload training data, review the training data and start the model training :)")
         upload_dataset_component()
+
+    with tab4:
+        view_dataset_component()
+
+    with tab5:
         train_component()
 
 
