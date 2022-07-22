@@ -1,12 +1,12 @@
 import streamlit as st
 import gensim.downloader
 import spacy
-from import_export import import_export
+from import_export_component import import_export
 from settings import model_dir
 from train_component import train_component
 from upload_dataset_component import upload_dataset_component
 from view_dataset_component import view_dataset_component
-from wordlist import wordlist
+from wordlist_component import wordlist
 from gensim.models import KeyedVectors
 
 available_gensim_models = ['glove-twitter-25', 'glove-wiki-gigaword-100']

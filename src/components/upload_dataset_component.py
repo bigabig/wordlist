@@ -2,10 +2,9 @@ import os
 import threading
 import time
 from io import StringIO
-from typing import List, Union
-import streamlit as st
+from typing import List
 import pandas as pd
-from streamlit.scriptrunner import add_script_run_ctx
+import streamlit as st
 from streamlit.uploaded_file_manager import UploadedFile
 from settings import datasets_dir
 from status_component import status_component, StreamlitStatusMessage, StreamlitStatus
@@ -27,7 +26,7 @@ prepro_thread_watcher = threading.Thread(target=thread_watcher, daemon=True)
 prepro_thread_watcher.start()
 
 
-def preprocess_text(text: str, lower_casing: bool, stop_word_filtering: bool, pos_tag_filtering: bool, pos_tag_filter_list: List[str]) -> List[List[str]]:
+def preprocess_text(text: str, lower_casing: bool, stop_word_filtering: bool, stop_words: List[str], pos_tag_filtering: bool, pos_tag_filter_list: List[str]) -> List[List[str]]:
     from main import nlp
 
     doc = nlp(text)
@@ -38,16 +37,19 @@ def preprocess_text(text: str, lower_casing: bool, stop_word_filtering: bool, po
         for token in sent:
             if pos_tag_filtering and token.pos_ in pos_tag_filter_list:
                 continue
-            # todo: also allow custom stop word list!
-            if stop_word_filtering and token.is_stop:
-                continue
+            if stop_word_filtering:
+                if len(stop_words) > 0:
+                    if token.text in stop_words:
+                        continue
+                elif token.is_stop:
+                    continue
             tokens.append(token.text.lower() if lower_casing else token.text)
         sentences.append(tokens)
 
     return sentences
 
 
-def preprocessing_thread(files: UploadedFile | List[UploadedFile], dataset_path, dataset_file_path, lower_casing, stop_word_filtering, pos_tag_filtering, pos_tag_filter_list):
+def preprocessing_thread(files: UploadedFile | List[UploadedFile], dataset_path, dataset_file_path, lower_casing, stop_word_filtering, stop_word_list, pos_tag_filtering, pos_tag_filter_list):
     # create dataset directory
     dataset_path.mkdir(parents=True)
 
@@ -58,7 +60,7 @@ def preprocessing_thread(files: UploadedFile | List[UploadedFile], dataset_path,
     if isinstance(files, list):
         for (i, file) in enumerate(files):
             prepro_thread_state[threading.get_ident()] = f'{i} / {len(files)}'
-            sentences = preprocess_text(StringIO(file.getvalue().decode("utf-8")).read(), lower_casing, stop_word_filtering, pos_tag_filtering, pos_tag_filter_list)
+            sentences = preprocess_text(StringIO(file.getvalue().decode("utf-8")).read(), lower_casing, stop_word_filtering, stop_word_list, pos_tag_filtering, pos_tag_filter_list)
             data.append((file.name, "\n".join([" ".join(sent) for sent in sentences])))
 
     else:
@@ -131,15 +133,32 @@ def upload_dataset_component():
                 st.session_state.dataset_status.append(StreamlitStatusMessage(status=StreamlitStatus.ERROR,
                                                                               message=f"Invalid CSV file: {e}"))
 
-        # todo validate that stopword list is valid
         # todo develop custom list component
         # todo deploy on server
 
+        # validate pos tag filter list
         if st.session_state.pos_tag_filtering and len(st.session_state.pos_tags_to_filter_out) == 0:
             st.session_state.dataset_status.append(StreamlitStatusMessage(
                 status=StreamlitStatus.ERROR,
                 message="Please provide at least one POS tag to filter out!"
             ))
+
+        # validate stopword list
+        stop_words = []
+        if st.session_state.stop_word_filtering and st.session_state.stop_word_file is not None:
+            try:
+                stop_words = list(filter(lambda x: len(x) > 0, st.session_state.stop_word_file.getvalue().decode("utf-8").splitlines()))
+                print(stop_words)
+                if len(stop_words) == 0:
+                    st.session_state.dataset_status.append(StreamlitStatusMessage(
+                        status=StreamlitStatus.ERROR,
+                        message="Uploaded stop word list contains no words!"
+                    ))
+            except Exception as e:
+                st.session_state.dataset_status.append(StreamlitStatusMessage(
+                    status=StreamlitStatus.ERROR,
+                    message=f"Invalid stopword list: {e}"
+                ))
 
         if len(st.session_state.dataset_status) > 0:
             return
@@ -152,6 +171,7 @@ def upload_dataset_component():
                                    dataset_file_path,
                                    st.session_state.lower_casing,
                                    st.session_state.stop_word_filtering,
+                                   stop_words,
                                    st.session_state.pos_tag_filtering,
                                    st.session_state.pos_tags_to_filter_out),
                              name=dataset_name)
@@ -188,8 +208,8 @@ def upload_dataset_component():
     st.checkbox('To lower case', key="lower_casing", disabled=True, value=True)
     stop_word_filtering = st.checkbox('Stop word filtering', key="stop_word_filtering", value=True)
     if stop_word_filtering:
-        st.write("You can provide your own list of stop words. If you leave this field empty, the default list will be used.")
-        st.file_uploader("Choose stop word file", type=["txt"], accept_multiple_files=False, key="uploaded_stop_words")
+        st.write("You can provide your own list of stop words. If you leave this field empty, the default list will be used. The file should contain one stop word per line.")
+        st.file_uploader("Choose stop word file", type=["txt"], accept_multiple_files=False, key="stop_word_file")
     pos_tag_filtering = st.checkbox('POS tag filtering', key="pos_tag_filtering", value=True)
     if pos_tag_filtering:
         st.multiselect(
