@@ -1,12 +1,12 @@
 import streamlit as st
 import gensim.downloader
 import spacy
-from import_export_component import import_export
-from settings import model_dir
-from train_component import train_component
-from upload_dataset_component import upload_dataset_component
-from view_dataset_component import view_dataset_component
-from wordlist_component import wordlist
+from components.import_export_component import import_export
+from config import model_dir, spacy_dir
+from components.train_component import train_component
+from components.upload_dataset_component import upload_dataset_component
+from components.view_dataset_component import view_dataset_component
+from components.wordlist_component import wordlist
 from gensim.models import KeyedVectors
 
 available_gensim_models = ['glove-twitter-25', 'glove-wiki-gigaword-100']
@@ -15,8 +15,7 @@ available_user_models = [f.name for f in model_dir.iterdir() if f.is_file()]
 
 @st.experimental_singleton
 def load_spacy():
-    print("en_core_web_sm")
-    return spacy.load("en_core_web_sm")
+    return spacy.load(spacy_dir / "en_core_web_sm-3.4.0")
 
 
 @st.experimental_singleton

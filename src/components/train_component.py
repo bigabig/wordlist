@@ -1,16 +1,11 @@
 import threading
 import time
-from io import StringIO
-import os
 from pathlib import Path
 import streamlit as st
-import pandas as pd
-from spacy import Language
-from gensim.models.word2vec import PathLineSentences
 from gensim.models import Word2Vec
-import numpy as np
-from settings import datasets_dir, model_dir
-from status_component import StreamlitStatusMessage, StreamlitStatus, status_component
+from gensim.models.word2vec import PathLineSentences
+from config import datasets_dir, model_dir
+from components.status_component import StreamlitStatusMessage, StreamlitStatus, status_component
 
 train_threads = []
 train_thread_state = {}

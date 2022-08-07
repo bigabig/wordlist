@@ -1,0 +1,20 @@
+version: "3.3"
+
+services:
+  wordlist:
+    image: bigabig/wordlist:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    # todo: volume for gensim model
+    volumes:
+      - ./spacy:/spacy
+      - ./datasets:/datasets
+      - ./models:/models
+    ports:
+      - "8888:8501"
+    networks:
+      - wordlist_network
+
+networks:
+  wordlist_network:

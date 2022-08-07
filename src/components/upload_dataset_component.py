@@ -6,8 +6,8 @@ from typing import List
 import pandas as pd
 import streamlit as st
 from streamlit.uploaded_file_manager import UploadedFile
-from settings import datasets_dir
-from status_component import status_component, StreamlitStatusMessage, StreamlitStatus
+from config import datasets_dir
+from components.status_component import status_component, StreamlitStatusMessage, StreamlitStatus
 
 prepro_threads = []
 prepro_thread_state = {}

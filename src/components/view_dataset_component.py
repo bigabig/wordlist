@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 
-from settings import datasets_dir
+from config import datasets_dir
 
 
 def view_dataset_component():

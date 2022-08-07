@@ -1,0 +1,8 @@
+models:
+  directory: ${oc.env:MODELS_DIRECTORY, models}
+
+datasets:
+  directory: ${oc.env:DATASETS_DIRECTORY, datasets}
+
+spacy:
+  directory: ${oc.env:SPACY_DIRECTORY, spacy}
